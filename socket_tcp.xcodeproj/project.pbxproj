@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8D22300C21B5D666000A3D07 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D22300B21B5D666000A3D07 /* libssl.a */; };
 		8D95A87D21B0FF5D00844EDE /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 8D95A87C21B0FF5D00844EDE /* main.c */; };
 /* End PBXBuildFile section */
 
@@ -23,6 +24,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		8D22300B21B5D666000A3D07 /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = "../../../../../../opt/metasploit-framework/embedded/lib/libssl.a"; sourceTree = "<group>"; };
 		8D95A87921B0FF5D00844EDE /* socket_tcp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = socket_tcp; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D95A87C21B0FF5D00844EDE /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; usesTabs = 0; wrapsLines = 1; };
 /* End PBXFileReference section */
@@ -32,17 +34,27 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8D22300C21B5D666000A3D07 /* libssl.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		8D22300A21B5D666000A3D07 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				8D22300B21B5D666000A3D07 /* libssl.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		8D95A87021B0FF5D00844EDE = {
 			isa = PBXGroup;
 			children = (
 				8D95A87B21B0FF5D00844EDE /* socket_tcp */,
 				8D95A87A21B0FF5D00844EDE /* Products */,
+				8D22300A21B5D666000A3D07 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -240,6 +252,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"/opt/metasploit-framework/embedded/lib",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -248,6 +264,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"/opt/metasploit-framework/embedded/lib",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

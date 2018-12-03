@@ -16,6 +16,10 @@
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <unistd.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <err.h>
+
 
 char* mail[20]={0};
 char buf[BUFSIZ+1];
@@ -41,14 +45,138 @@ void read_socket(int sock)
     len = read(sock,buf,BUFSIZ);
     write(1,buf,len);
 }
+int ssl_send_line(SSL* ssl,char* cmd)
+{
+    unsigned long err;
+    printf("C: %s",cmd);
+    err = SSL_write (ssl, cmd, strlen(cmd));
+    return 1;
+}
+int ssl_get_line(SSL* ssl)
+{
+    int err;
+    err = SSL_read (ssl, buf, sizeof(buf) - 1);
+    buf[err] = '\0';
+    printf ("S: :%s", buf);
+    return 1;
+}
+
+int ssl_sendmail(){
+    int sock;
+    struct sockaddr_in server;
+    struct hostent *hp, *gethostbyname();
+    char *host_id="smtp.qq.com";
+    int err;
+    SSL_CTX* ctx;
+    SSL* ssl;
+    SSL_METHOD* meth;
+    
+    SSL_library_init();
+    SSL_load_error_strings();
+    meth=SSLv23_method();
+    ctx = SSL_CTX_new (meth);
+    
+    /*=====Create Socket=====*/
+    printf("socket creating...\n");
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock==-1)
+    {
+        perror("opening stream socket");
+        return 1;
+    }
+    else
+        printf("socket created\n");
+    /*=====Verify host=====*/
+    server.sin_family = AF_INET;
+    hp = gethostbyname(host_id);
+    if (hp==(struct hostent *) 0)
+    {
+        fprintf(stderr, "%s: unknown host\n", host_id);
+        return 2;
+    }
+    /*=====Connect to port 25 on remote host=====*/
+    memcpy((char *) &server.sin_addr, (char *) hp->h_addr, hp->h_length);
+    server.sin_port=htons(25);
+    if (connect(sock, (struct sockaddr *) &server, sizeof server)==-1)
+    {
+        perror("connecting stream socket");
+        return 1;
+    }
+    else
+        printf("Connected\n");
+    
+    /*=====Write some data then read some =====*/
+    read_socket(sock); /* SMTP Server WELCOME string */
+    
+    /*HELO*/
+    sendtext(sock, "", "", "HELO twx\r\n", 0);
+    read_socket(sock);
+    
+    sendtext(sock, "", "", "STARTTLS\r\n", 0);
+    read_socket(sock);
+    
+    
+    SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2);
+    ssl = SSL_new (ctx);
+    if(ssl>0) printf("new_SSL:%d\n",ssl);
+    SSL_set_fd (ssl, sock);
+    
+    err = SSL_connect (ssl);
+    printf ("SSL connection using %s\n", SSL_get_cipher (ssl));
+    printf("Begin SSL data exchange\n");
+    
+    ssl_send_line(ssl, mail[0]);
+    ssl_get_line(ssl);
+    
+    /*AUTH LOGIN*/
+    ssl_send_line(ssl, mail[1]);
+    ssl_get_line(ssl);
+    
+    /*base64 of username*/
+    ssl_send_line(ssl, mail[2]);
+    ssl_get_line(ssl);
+    
+    /*base64 of password*/
+    ssl_send_line(ssl, mail[3]);
+    ssl_get_line(ssl);
+    
+    /*mail from*/
+    ssl_send_line(ssl, mail[4]);
+    ssl_get_line(ssl);
+    
+    /*rcpt to*/
+    ssl_send_line(ssl, mail[5]);
+    ssl_get_line(ssl);
+    
+    /*DATA*/
+    ssl_send_line(ssl, mail[6]);
+    ssl_get_line(ssl);
+    for(int j=7;j<n-1;j++){
+        ssl_send_line(ssl, mail[j]);
+    }
+    ssl_get_line(ssl);
+    
+    /*QUIT*/
+    ssl_send_line(ssl, mail[n-1]);
+    ssl_get_line(ssl);
+    
+    /*=====Close socket and finish=====*/
+    close(sock);
+    SSL_shutdown (ssl); /* send SSL/TLS close_notify */
+    shutdown (sock,2);
+    SSL_free (ssl);
+    SSL_CTX_free (ctx);
+    return 0;
+}
 
 int sendmail(){
     int sock;
     struct sockaddr_in server;
-    struct hostent *hp, *gethostbyname(const char *name);
+    struct hostent *hp, *gethostbyname();
     char *host_id="smtp.qq.com";
     
     /*=====Create Socket=====*/
+    printf("socket creating...\n");
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock==-1)
     {
@@ -123,7 +251,7 @@ int sendmail(){
 int getmail()
 {
     FILE *fp=NULL;
-    char* mailtxt="/Users/twx/Desktop/error.txt";//Path of txt file
+    char* mailtxt="/Users/twx/Desktop/recv.txt";//Path of txt file
     int server_sockfd;
     int client_sockfd = 0;
     struct sockaddr_in my_addr;
@@ -220,7 +348,7 @@ int getmail()
         
     }
     n=i-1;
-    if(i>7) sendmail();
+    if(i>7&& flag>=5) sendmail();
     
     printf("client %s closed\n\n",inet_ntoa(remote_addr.sin_addr));
     close(client_sockfd);
@@ -233,6 +361,7 @@ int getmail()
 int main(){
     while(1){
         getmail();
+        ssl_sendmail();
     }
     return 0;
 }
