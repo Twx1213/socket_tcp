@@ -40,99 +40,6 @@ void read_socket(int sock)
     write(1,buf,len);
 }
 
-int getmail()
-{
-    FILE *fp=NULL;
-    char* mailtxt="/Users/twx/Desktop/recv.txt";//Path of txt file
-    int server_sockfd;
-    int client_sockfd = 0;
-    struct sockaddr_in my_addr;
-    struct sockaddr_in remote_addr;
-    int sin_size;
-    memset(&my_addr,0,sizeof(my_addr));
-    my_addr.sin_family=AF_INET;//ipv4
-    my_addr.sin_addr.s_addr=INADDR_ANY;
-    my_addr.sin_port=htons(25);//SMTP port
-    char* text[10]={
-        "220 smtp.TT.com\r\n",
-        "250-smtp.TT.com\r\n250-PIPELINING\r\n250-SIZE 73400320\r\n250-STARTTLS\r\n250-AUTH LOGIN PLAIN\r\n250-AUTH=LOGIN\r\n250-MAILCOMPRESS\r\n250 8BITMIME\r\n",
-        "334 VXNlcm5hbWU6\r\n",
-        "334 UGFzc3dvcmQ6\r\n",
-        "235 Authentication successful\r\n",
-        "250 OK\r\n",
-        "354 End data with <CR><LF>.<CR><LF>\r\n",
-        "250 Ok: queued as\r\n",
-    };
-    
-    /*=====TCP on IPv4=====*/
-    if((server_sockfd=socket(PF_INET,SOCK_STREAM,0))<0)
-    {
-        perror("socket");
-        return 1;
-    }
-    /*=====reuseaddr=====*/
-    int on=1;
-    if(setsockopt(server_sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int))<0){
-        perror("reuseaddr");
-        return 1;
-    }
-    /*=====bind socket to server address=====*/
-    if (bind(server_sockfd,(struct sockaddr *)&my_addr,sizeof(struct sockaddr))<0)
-    {
-        perror("bind");
-        return 1;
-    }
-    /*=====listen queue=====*/
-    listen(server_sockfd,5);
-    printf("wait for client.\n");
-    sin_size=sizeof(struct sockaddr_in);
-    /*=====wait for client=====*/
-    client_sockfd=(accept(server_sockfd,(struct sockaddr *)&remote_addr,(socklen_t *)&sin_size));
-    if(client_sockfd<0)
-    {
-        perror("accept");
-        return 1;
-    }
-    fp=fopen(mailtxt, "w+");
-    printf("accept client %s\n",inet_ntoa(remote_addr.sin_addr));
-    sendtext(client_sockfd, "", "", text[0],1);//WELCOME
-    
-    /*=====recv and send messang=====*/
-    int i=0;
-    while(len!=0)
-    {
-        len=(recv(client_sockfd,buf,BUFSIZ,0));
-        buf[len]='\0';
-        mail[i] = malloc(sizeof(char)*len);
-        strcpy(mail[i],&(*buf));
-        i++;
-        printf("%s\n",buf);
-        fprintf(fp,"%s", buf);
-        if(strcmp(buf,"QUIT")==0){
-            close(client_sockfd);
-        }
-        sendtext(client_sockfd, "EHLO", buf, text[1],1);
-        sendtext(client_sockfd, "AUTH LOGIN", buf, text[2],1);
-        sendtext(client_sockfd, "Mjc3ODAxMDYwNkBxcS5jb20=", buf, text[3],1);//mail[2] is base64 of username
-        sendtext(client_sockfd, "bmdlb2t2a3RmZml1ZGVjYg==", buf, text[4],1);//mail[3] is base64 of password
-        sendtext(client_sockfd, "MAIL FROM", buf, text[5],1);
-        sendtext(client_sockfd, "RCPT TO", buf, text[5],1);
-        sendtext(client_sockfd, "DATA", buf, text[6],1);
-        sendtext(client_sockfd, ".", buf+strlen(buf)-3, text[7],1);
-    }
-    
-    printf("client %s closed\n\n",inet_ntoa(remote_addr.sin_addr));
-    close(client_sockfd);
-    fclose(fp);
-    for(int j=0;j<i;j++){
-        printf("mail[%d]:%s\n",j,mail[j]);
-    }
-    n=i-1;
-    
-    close(server_sockfd);
-    return 0;
-}
-
 int sendmail(){
     int sock;
     struct sockaddr_in server;
@@ -211,8 +118,117 @@ int sendmail(){
     return 0;
 }
 
+int getmail()
+{
+    FILE *fp=NULL;
+    char* mailtxt="/Users/twx/Desktop/recv.txt";//Path of txt file
+    int server_sockfd;
+    int client_sockfd = 0;
+    struct sockaddr_in my_addr;
+    struct sockaddr_in remote_addr;
+    int sin_size;
+    memset(&my_addr,0,sizeof(my_addr));
+    my_addr.sin_family=AF_INET;//ipv4
+    my_addr.sin_addr.s_addr=INADDR_ANY;
+    my_addr.sin_port=htons(25);//SMTP port
+    char* text[10]={
+        "220 smtp.TT.com\r\n",
+        "250-smtp.TT.com\r\n250-PIPELINING\r\n250-SIZE 73400320\r\n250-STARTTLS\r\n250-AUTH LOGIN PLAIN\r\n250-AUTH=LOGIN\r\n250-MAILCOMPRESS\r\n250 8BITMIME\r\n",
+        "334 VXNlcm5hbWU6\r\n",
+        "334 UGFzc3dvcmQ6\r\n",
+        "235 Authentication successful\r\n",
+        "250 OK\r\n",
+        "354 End data with <CR><LF>.<CR><LF>\r\n",
+        "250 Ok: queued as\r\n",
+    };
+    
+    /*=====TCP on IPv4=====*/
+    if((server_sockfd=socket(PF_INET,SOCK_STREAM,0))<0)
+    {
+        perror("socket");
+        return 1;
+    }
+    /*=====reuseaddr=====*/
+    int on=1;
+    if(setsockopt(server_sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int))<0){
+        perror("reuseaddr");
+        return 1;
+    }
+    /*=====bind socket to server address=====*/
+    if (bind(server_sockfd,(struct sockaddr *)&my_addr,sizeof(struct sockaddr))<0)
+    {
+        perror("bind");
+        return 1;
+    }
+    /*=====listen queue=====*/
+    listen(server_sockfd,5);
+    printf("wait for client.\n");
+    sin_size=sizeof(struct sockaddr_in);
+    /*=====wait for client=====*/
+    client_sockfd=(accept(server_sockfd,(struct sockaddr *)&remote_addr,(socklen_t *)&sin_size));
+    if(client_sockfd<0)
+    {
+        perror("accept");
+        return 1;
+    }
+    fp=fopen(mailtxt, "w+");
+    printf("accept client %s\n",inet_ntoa(remote_addr.sin_addr));
+    sendtext(client_sockfd, "", "", text[0],1);//WELCOME
+    
+    /*=====recv and send messang=====*/
+    int i=0;
+    int flag=0;
+    while(len>=3)
+    {
+        len=(recv(client_sockfd,buf,BUFSIZ,0));
+        buf[len]='\0';
+        mail[i] = malloc(sizeof(char)*len);
+        strcpy(mail[i],&(*buf));
+        i++;
+        printf("%s\n",buf);
+        fprintf(fp,"%s", buf);
+        if(strcmp(buf,"QUIT")==0){
+            close(client_sockfd);
+        }
+        switch(flag){
+            case 0:
+                sendtext(client_sockfd, "EHLO", buf, text[1],1);
+                flag++;
+                break;
+            case 1:
+                sendtext(client_sockfd, "AUTH LOGIN", buf, text[2],1);
+                flag++;
+                break;
+            case 2:
+                sendtext(client_sockfd, "", buf, text[3],1);//mail[2] is base64 of username Mjc3ODAxMDYwNkBxcS5jb20=  
+                flag++;
+                break;
+            case 3:
+                sendtext(client_sockfd, "", buf, text[4],1);//mail[3] is base64 of password bmdlb2t2a3RmZml1ZGVjYg==
+                flag++;
+                break;
+            case 4:
+                sendtext(client_sockfd, "MAIL FROM", buf, text[5],1);
+        }
+        sendtext(client_sockfd, "RCPT TO", buf, text[5],1);
+        sendtext(client_sockfd, "DATA", buf, text[6],1);
+        sendtext(client_sockfd, ".", buf+strlen(buf)-3, text[7],1);
+        
+    }
+    n=i-1;
+    if(i>5) sendmail();
+    
+    printf("client %s closed\n\n",inet_ntoa(remote_addr.sin_addr));
+    close(client_sockfd);
+    fclose(fp);
+    
+    close(server_sockfd);
+    return 0;
+}
+
 int main(){
-    getmail();
-    if(n>5) sendmail();
+    while(1){
+        getmail();
+    }
     return 0;
 }
