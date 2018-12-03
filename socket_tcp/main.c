@@ -19,6 +19,8 @@
 
 char* mail[20]={0};
 char buf[BUFSIZ+1];
+char* from_addr;
+char* to_addr[10];
 int n=0;
 long len=0;
 
@@ -121,7 +123,7 @@ int sendmail(){
 int getmail()
 {
     FILE *fp=NULL;
-    char* mailtxt="/Users/twx/Desktop/recv.txt";//Path of txt file
+    char* mailtxt="/Users/twx/Desktop/error.txt";//Path of txt file
     int server_sockfd;
     int client_sockfd = 0;
     struct sockaddr_in my_addr;
@@ -178,7 +180,7 @@ int getmail()
     /*=====recv and send messang=====*/
     int i=0;
     int flag=0;
-    while(len>=3)
+    while(len>=2)
     {
         len=(recv(client_sockfd,buf,BUFSIZ,0));
         buf[len]='\0';
@@ -209,6 +211,8 @@ int getmail()
                 break;
             case 4:
                 sendtext(client_sockfd, "MAIL FROM", buf, text[5],1);
+                flag++;
+                break;
         }
         sendtext(client_sockfd, "RCPT TO", buf, text[5],1);
         sendtext(client_sockfd, "DATA", buf, text[6],1);
@@ -216,7 +220,7 @@ int getmail()
         
     }
     n=i-1;
-    if(i>5) sendmail();
+    if(i>7) sendmail();
     
     printf("client %s closed\n\n",inet_ntoa(remote_addr.sin_addr));
     close(client_sockfd);
