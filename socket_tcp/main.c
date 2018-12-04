@@ -71,6 +71,7 @@ int ssl_sendmail(){
     SSL* ssl;
     SSL_METHOD* meth;
     
+    //=====SSL init=====//
     SSL_library_init();
     SSL_load_error_strings();
     meth=SSLv23_method();
@@ -94,7 +95,7 @@ int ssl_sendmail(){
         fprintf(stderr, "%s: unknown host\n", host_id);
         return 2;
     }
-    /*=====Connect to port 25 on remote host=====*/
+    //=====Connect to port 25 on remote host=====//
     memcpy((char *) &server.sin_addr, (char *) hp->h_addr, hp->h_length);
     server.sin_port=htons(25);
     if (connect(sock, (struct sockaddr *) &server, sizeof server)==-1)
@@ -105,10 +106,10 @@ int ssl_sendmail(){
     else
         printf("Connected\n");
     
-    /*=====Write some data then read some =====*/
-    read_socket(sock); /* SMTP Server WELCOME string */
+    //=====Write some data then read some =====//
+    read_socket(sock); // SMTP Server WELCOME string
     
-    /*HELO*/
+    //=====HELO=====//
     sendtext(sock, "", "", "HELO twx\r\n", 0);
     read_socket(sock);
     
@@ -124,31 +125,31 @@ int ssl_sendmail(){
     err = SSL_connect (ssl);
     printf ("SSL connection using %s\n", SSL_get_cipher (ssl));
     printf("Begin SSL data exchange\n");
-    
+    //=====SSL HELO=====//
     ssl_send_line(ssl, mail[0]);
     ssl_get_line(ssl);
     
-    /*AUTH LOGIN*/
+    //=====AUTH LOGIN=====//
     ssl_send_line(ssl, mail[1]);
     ssl_get_line(ssl);
     
-    /*base64 of username*/
+    //=====base64 of username=====//
     ssl_send_line(ssl, mail[2]);
     ssl_get_line(ssl);
     
-    /*base64 of password*/
+    //=====base64 of password=====//
     ssl_send_line(ssl, mail[3]);
     ssl_get_line(ssl);
     
-    /*mail from*/
+    //=====mail from=====//
     ssl_send_line(ssl, mail[4]);
     ssl_get_line(ssl);
     
-    /*rcpt to*/
+    //=====rcpt to=====//
     ssl_send_line(ssl, mail[5]);
     ssl_get_line(ssl);
     
-    /*DATA*/
+    //=====DATA=====//
     ssl_send_line(ssl, mail[6]);
     ssl_get_line(ssl);
     for(int j=7;j<n-1;j++){
@@ -156,13 +157,13 @@ int ssl_sendmail(){
     }
     ssl_get_line(ssl);
     
-    /*QUIT*/
+    //=====QUIT=====//
     ssl_send_line(ssl, mail[n-1]);
     ssl_get_line(ssl);
     
-    /*=====Close socket and finish=====*/
+    //=====Close socket and finish=====//
     close(sock);
-    SSL_shutdown (ssl); /* send SSL/TLS close_notify */
+    SSL_shutdown (ssl); // send SSL/TLS close_notify
     shutdown (sock,2);
     SSL_free (ssl);
     SSL_CTX_free (ctx);
@@ -175,7 +176,7 @@ int sendmail(){
     struct hostent *hp, *gethostbyname();
     char *host_id="smtp.qq.com";
     
-    /*=====Create Socket=====*/
+    //=====Create Socket=====//
     printf("socket creating...\n");
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock==-1)
@@ -185,7 +186,7 @@ int sendmail(){
     }
     else
         printf("socket created\n");
-    /*=====Verify host=====*/
+    //=====Verify host=====//
     server.sin_family = AF_INET;
     hp = gethostbyname(host_id);
     if (hp==(struct hostent *) 0)
@@ -193,7 +194,7 @@ int sendmail(){
         fprintf(stderr, "%s: unknown host\n", host_id);
         return 2;
     }
-    /*=====Connect to port 25 on remote host=====*/
+    //=====Connect to port 25 on remote host=====//
     memcpy((char *) &server.sin_addr, (char *) hp->h_addr, hp->h_length);
     server.sin_port=htons(25);
     if (connect(sock, (struct sockaddr *) &server, sizeof server)==-1)
@@ -204,34 +205,34 @@ int sendmail(){
     else
         printf("Connected\n");
     
-    /*=====Write some data then read some =====*/
+    //=====Write some data then read some =====//
     read_socket(sock); /* SMTP Server WELCOME string */
     
-    /*HELO*/
+    //=====HELO=====//
     sendtext(sock, "", "", mail[0], 0);
     read_socket(sock);
     
-    /*AUTH LOGIN*/
+    //=====AUTH LOGIN=====//
     sendtext(sock, "", "", mail[1], 0);
     read_socket(sock);
     
-    /*base64 of username*/
+    //=====base64 of username=====//
     sendtext(sock, "", "", mail[2], 0);
     read_socket(sock);
     
-    /*base64 of password*/
+    //=====base64 of password=====//
     sendtext(sock, "", "", mail[3], 0);
     read_socket(sock);
     
-    /*mail from*/
+    //=====mail from=====//
     sendtext(sock, "", "", mail[4], 0);
     read_socket(sock);
     
-    /*rcpt to*/
+    //=====rcpt to=====//
     sendtext(sock, "", "", mail[5], 0);
     read_socket(sock);
     
-    /*DATA*/
+    //=====DATA=====//
     sendtext(sock, "", "", mail[6], 0);
     read_socket(sock);
     for(int j=7;j<n-1;j++){
@@ -239,11 +240,11 @@ int sendmail(){
     }
     read_socket(sock);
     
-    /*QUIT*/
+    //=====QUIT=====//
     sendtext(sock, "", "", mail[n-1], 0);
     read_socket(sock);
     
-    /*=====Close socket and finish=====*/
+    //====Close socket and finish=====//
     close(sock);
     return 0;
 }
@@ -272,25 +273,25 @@ int getmail()
         "250 Ok: queued as\r\n",
     };
     
-    /*=====TCP on IPv4=====*/
+    //=====TCP on IPv4=====//
     if((server_sockfd=socket(PF_INET,SOCK_STREAM,0))<0)
     {
         perror("socket");
         return 1;
     }
-    /*=====reuseaddr=====*/
+    //=====reuseaddr=====//
     int on=1;
     if(setsockopt(server_sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int))<0){
         perror("reuseaddr");
         return 1;
     }
-    /*=====bind socket to server address=====*/
+    //=====bind socket to server address=====//
     if (bind(server_sockfd,(struct sockaddr *)&my_addr,sizeof(struct sockaddr))<0)
     {
         perror("bind");
         return 1;
     }
-    /*=====listen queue=====*/
+    //=====listen queue=====//
     listen(server_sockfd,5);
     printf("wait for client.\n");
     sin_size=sizeof(struct sockaddr_in);
@@ -305,7 +306,7 @@ int getmail()
     printf("accept client %s\n",inet_ntoa(remote_addr.sin_addr));
     sendtext(client_sockfd, "", "", text[0],1);//WELCOME
     
-    /*=====recv and send messang=====*/
+    //=====recv and send messang=====//
     int i=0;
     int flag=0;
     while(len>=2)
@@ -360,7 +361,7 @@ int getmail()
 
 int main(){
     while(1){
-        getmail();
+        //getmail();
         ssl_sendmail();
     }
     return 0;
