@@ -34,6 +34,7 @@ char* errort[5]={
     "503 Error: need EHLO and AUTH first !",
     "502 Error: auth command not implemented"
 };
+char* errr;
 
 //=====Log Date=====//
 char* log_path(){
@@ -94,6 +95,8 @@ int ssl_get_line(SSL* ssl)
     buf[err] = '\0';
     if(strncmp(buf,"5",1)==0){
         err=-1;
+        errr=malloc(sizeof(char)*sizeof(buf));
+        strcpy(errr,&(*buf));
     }
     printf ("S: %s", buf);
     return err;
@@ -525,20 +528,7 @@ int ssl_getmail()
     printf("wait for client.\n");
     sin_size=sizeof(struct sockaddr_in);
     
-    /*=====wait for client=====*/
-    /*client_sockfd=(accept(server_sockfd,(struct sockaddr *)&remote_addr,(socklen_t *)&sin_size));
-     if(client_sockfd<0)
-     {
-     perror("accept");
-     return 1;
-     }
-     fp=fopen(mailtxt, "w+");
-     printf("accept client %s\n",inet_ntoa(remote_addr.sin_addr));
-     sendtext(client_sockfd, "", "", text[0],1);//WELCOME
-     */
-    
-    
-    /* 等待客户端连上来 */
+    //=====wait for client=====//
     if ((client_sockfd = accept(server_sockfd, (struct sockaddr *) &remote_addr, (socklen_t *)&sin_size)) == -1)
     {
         perror("accept");
@@ -551,12 +541,12 @@ int ssl_getmail()
     
     
     
-    /* 基于 ctx 产生一个新的 SSL */
+    // 基于 ctx 产生一个新的 SSL //
     ssl = SSL_new(ctx);
-    /* 将连接用户的 socket 加入到 SSL */
+    // 将连接用户的 socket 加入到 SSL //
     SSL_set_fd(ssl, client_sockfd);
     printf("Add to SSl.\n");
-    /* 建立 SSL 连接 */
+    // 建立 SSL 连接 //
     if (SSL_accept(ssl) == -1)
     {
         perror("accept");
@@ -564,8 +554,8 @@ int ssl_getmail()
         return -3;
     }
     printf("Connected.\n");
-    SSL_write(ssl,text[0], (int)strlen(text[0]));//WELCOME
-    printf("HELO\n");
+    len=SSL_write(ssl,text[0], (int)strlen(text[0]));//WELCOME
+    printf("%s\r\n",text[0]);
     
     
     
@@ -611,7 +601,11 @@ int ssl_getmail()
                 if(strncmp(buf,"MAIL FROM",strlen("MAIL FROM"))==0){
                     printf("%s\n",text[5]);
                     from_addr=malloc(sizeof(char)*100);
-                    strncpy(from_addr, buf+strlen("MAIL FROM:<"), len-strlen("MAIL FROM:<")-3);
+                    void* start=memchr(buf,'<',sizeof(buf));
+                    void* stop = memchr(buf, '>', sizeof(buf));
+                    //strncpy(from_addr, buf+strlen("MAIL FROM:<"), len-strlen("MAIL FROM:<")-3);
+                    strncpy(from_addr, start+1, stop-start-1);
+                    printf("//================== from_addr: <%s> ==================//\r\n",from_addr);
                     len=SSL_write(ssl, text[5], (int)strlen(text[5]));
                 }
                 flag++;
@@ -622,7 +616,11 @@ int ssl_getmail()
         if(strncmp(buf,"RCPT TO",strlen("RCPT TO"))==0){
             printf("%s\n",text[5]);
             to_addr[num_to_addr]=malloc(sizeof(char)*100);
-            strncpy(to_addr[num_to_addr], buf+strlen("RCPT TO:<"), len-strlen("RCPT TO:<")-3);
+            void* start=memchr(buf,'<',sizeof(buf));
+            void* stop = memchr(buf, '>', sizeof(buf));
+            //strncpy(to_addr[num_to_addr], buf+strlen("RCPT TO:<"), len-strlen("RCPT TO:<")-3);
+            strncpy(to_addr[num_to_addr], start+1, stop-start-1);
+            printf("//================== to_addr[%d]: <%s> ==================//\r\n",num_to_addr+1,to_addr[num_to_addr]);
             num_to_addr+=1;
             
             len=SSL_write(ssl, text[5], (int)strlen(text[5]));
@@ -638,8 +636,8 @@ int ssl_getmail()
                 printf("%s\n",text[7]);
             }
             else{
-                len=SSL_write(ssl, errort[0], (int)strlen(errort[0]));
-                printf("%s\n",errort[0]);
+                len=SSL_write(ssl, errr, (int)strlen(errr));
+                printf("%s\n",errr);
             }
             //break;
         }
@@ -649,9 +647,9 @@ int ssl_getmail()
     printf("client %s closed\n\n",inet_ntoa(remote_addr.sin_addr));
     close(client_sockfd);
     fclose(fp);
-    /* 关闭 SSL 连接 */
+    // 关闭 SSL 连接 //
     SSL_shutdown(ssl);
-    /* 释放 SSL */
+    // 释放 SSL //
     SSL_free(ssl);
     close(server_sockfd);
     SSL_CTX_free(ctx);
@@ -667,7 +665,7 @@ int main(){
         ssl_getmail();
         printf("//================== from_addr: <%s> ==================//\r\n",from_addr);
         for(int i=0;i<num_to_addr;i++){
-            printf("//================== to_addr[%d]: <%s> ==================//\r\n",i,to_addr[i]);
+            printf("//================== to_addr[%d]: <%s> ==================//\r\n",i+1,to_addr[i]);
         }
     }
     return 0;
