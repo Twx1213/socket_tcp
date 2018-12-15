@@ -35,6 +35,7 @@ char* errort[5]={
     "502 Error: auth command not implemented"
 };
 char* errr;
+char local[180];
 
 //=====Log Date=====//
 char* log_path(){
@@ -44,7 +45,10 @@ char* log_path(){
     str = malloc(sizeof(char)*100);
     localTime=time(NULL);
     ptr=localtime(&localTime);
-    strftime(str,100,"/Users/twx/Desktop/Log-%Y%m%d%H%M.txt",ptr);
+    char* logs_path;
+    logs_path=malloc(sizeof(char)*120);
+    logs_path = strcat(*(&local),"/Log-%Y%m%d%H%M.txt");
+    strftime(str,100,logs_path,ptr);
     printf("%s\n",*(&str));
     return str;
 }
@@ -482,15 +486,20 @@ int ssl_getmail()
         return 1;
     }
     /* 载入用户的数字证书， 此证书用来发送给客户端。 证书里包含有公钥 */
-    
-    if (SSL_CTX_use_certificate_file(ctx, "/Users/twx/Desktop/NetWork/SMTP/socket_tcp/socket_tcp/cert.pem", SSL_FILETYPE_PEM) <= 0)
+    char* cert_path;
+    cert_path=malloc(sizeof(char)*120);
+    cert_path = strcat(*(&local),"/cert.pem");
+    if (SSL_CTX_use_certificate_file(ctx, cert_path, SSL_FILETYPE_PEM) <= 0)
     {
         ERR_print_errors_fp(stdout);
         exit(999);
     }
     
     /* 载入用户私钥 */
-    if (SSL_CTX_use_PrivateKey_file(ctx, "/Users/twx/Desktop/NetWork/SMTP/socket_tcp/socket_tcp/key.pem", SSL_FILETYPE_PEM) <= 0)
+    char* key_path;
+    key_path=malloc(sizeof(char)*120);
+    key_path = strcat(*(&local),"/key.pem");
+    if (SSL_CTX_use_PrivateKey_file(ctx, key_path, SSL_FILETYPE_PEM) <= 0)
     {
         ERR_print_errors_fp(stdout);
         exit(998);
@@ -661,6 +670,8 @@ int ssl_getmail()
 
 int main(){
     while(1){
+        getcwd(local, sizeof(local));
+        printf("%s\n\n",local);
         num_to_addr=0;
         ssl_getmail();
         printf("//================== from_addr: <%s> ==================//\r\n",from_addr);
