@@ -31,6 +31,10 @@
 		8D86CCDF21C23054007BC41F /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = "../../../../../../opt/metasploit-framework/embedded/lib/libcrypto.a"; sourceTree = "<group>"; };
 		8D95A87921B0FF5D00844EDE /* socket_tcp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = socket_tcp; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D95A87C21B0FF5D00844EDE /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; usesTabs = 0; wrapsLines = 1; };
+		8DD46FDD21C6095000F6FB0B /* mail_regex.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mail_regex.h; sourceTree = "<group>"; };
+		8DD46FDE21C609D600F6FB0B /* get_send_mail.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = get_send_mail.h; sourceTree = "<group>"; };
+		8DD46FDF21C60C6D00F6FB0B /* get_send_mail_ssl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = get_send_mail_ssl.h; sourceTree = "<group>"; };
+		8DD46FE021C60FCC00F6FB0B /* Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Header.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,6 +82,10 @@
 				8D86CCDE21C23009007BC41F /* cert.pem */,
 				8D86CCDD21C23008007BC41F /* key.pem */,
 				8D95A87C21B0FF5D00844EDE /* main.c */,
+				8DD46FDD21C6095000F6FB0B /* mail_regex.h */,
+				8DD46FDE21C609D600F6FB0B /* get_send_mail.h */,
+				8DD46FDF21C60C6D00F6FB0B /* get_send_mail_ssl.h */,
+				8DD46FE021C60FCC00F6FB0B /* Header.h */,
 			);
 			path = socket_tcp;
 			sourceTree = "<group>";
