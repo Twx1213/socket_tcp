@@ -2,8 +2,8 @@
 //  get_send_mail.h
 //  socket_tcp
 //
-//  Created by 汤文骁 on 12/16/18.
-//  Copyright © 2018 twx. All rights reserved.
+//  Created by Tiko on 12/16/18.
+//  Copyright © 2018 Tiko. All rights reserved.
 //
 
 #ifndef get_send_mail_h
