@@ -19,6 +19,7 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <err.h>
+#include <regex.h>
 #include <time.h>
 
 
@@ -31,11 +32,43 @@ int num_to_addr=0;
 int n=0;
 long len=0;
 char* errort[5]={
+    "501 Bad address syntax",
+    "501 mail from address must be same as authorization user",
+    "502 Error: auth command not implemented",
     "503 Error: need EHLO and AUTH first !",
-    "502 Error: auth command not implemented"
+    
 };
 char* errr;
-char local[180];
+char local[100]="/Users/twx/Desktop/NetWork/SMTP/socket_tcp/socket_tcp";
+
+
+
+int mail_path(char* str){
+    const char* pattern="([0-9A-Za-z\\-_\\.]+)@([0-9a-z]+\\.[a-z]{2,3}(\\.[a-z]{2})?)";
+    regmatch_t pmatch;
+    regex_t reg;
+    regcomp(&reg, pattern, REG_EXTENDED);
+    int offset = 0;
+    
+    while(offset < strlen(str))
+    {
+        int status = regexec(&reg, str + offset, 1, &pmatch, 0);
+        /* 匹配正则表达式，注意regexec()函数一次只能匹配一个，不能连续匹配，网上很多示例并没有说明这一点 */
+        if(status == REG_NOMATCH){
+            printf("No Match\n");
+            return -1;
+        }
+        else if(pmatch.rm_so != -1)
+        {
+            printf("Matched\n");
+            //char *p = getsubstr(str + offset, &pmatch);
+            //printf("[%d, %d]: %s\n", offset + pmatch.rm_so + 1, offset + pmatch.rm_eo, p);
+        }
+        offset += pmatch.rm_eo;
+    }
+    regfree(&reg);
+    return 0;
+}
 
 //=====Log Date=====//
 char* log_path(){
@@ -45,9 +78,9 @@ char* log_path(){
     str = malloc(sizeof(char)*100);
     localTime=time(NULL);
     ptr=localtime(&localTime);
-    char* logs_path;
-    logs_path=malloc(sizeof(char)*120);
-    logs_path = strcat(*(&local),"/Log-%Y%m%d%H%M.txt");
+    char* logs_path = "/Users/twx/Desktop/Log-%Y%m%d%H%M.txt";;
+    //logs_path=malloc(sizeof(char)*120);
+    //logs_path = "/Users/twx/Desktop/Log-%Y%m%d%H%M.txt";
     strftime(str,100,logs_path,ptr);
     printf("%s\n",*(&str));
     return str;
@@ -389,11 +422,11 @@ int getmail()
                 flag++;
                 break;
             case 2:
-                sendtext(client_sockfd, "", buf, text[3],1);//mail[2] is base64 of username Mjc3ODAxMDYwNkBxcS5jb20=  
+                sendtext(client_sockfd, "", buf, text[3],1);//mail[2] is base64 of username
                 flag++;
                 break;
             case 3:
-                sendtext(client_sockfd, "", buf, text[4],1);//mail[3] is base64 of password bmdlb2t2a3RmZml1ZGVjYg==
+                sendtext(client_sockfd, "", buf, text[4],1);//mail[3] is base64 of password 
                 flag++;
                 break;
             case 4:
@@ -486,9 +519,9 @@ int ssl_getmail()
         return 1;
     }
     /* 载入用户的数字证书， 此证书用来发送给客户端。 证书里包含有公钥 */
-    char* cert_path;
-    cert_path=malloc(sizeof(char)*120);
-    cert_path = strcat(*(&local),"/cert.pem");
+    char* cert_path = "/Users/twx/Desktop/NetWork/SMTP/socket_tcp/socket_tcp/cert.pem";;
+    //cert_path=malloc(sizeof(char)*120);
+    //cert_path = strcat(local,"/cert.pem");
     if (SSL_CTX_use_certificate_file(ctx, cert_path, SSL_FILETYPE_PEM) <= 0)
     {
         ERR_print_errors_fp(stdout);
@@ -496,9 +529,9 @@ int ssl_getmail()
     }
     
     /* 载入用户私钥 */
-    char* key_path;
-    key_path=malloc(sizeof(char)*120);
-    key_path = strcat(*(&local),"/key.pem");
+    char* key_path = "/Users/twx/Desktop/NetWork/SMTP/socket_tcp/socket_tcp/key.pem";
+    //key_path=malloc(sizeof(char)*120);
+    //key_path = strcat(local,"/key.pem");
     if (SSL_CTX_use_PrivateKey_file(ctx, key_path, SSL_FILETYPE_PEM) <= 0)
     {
         ERR_print_errors_fp(stdout);
@@ -597,11 +630,11 @@ int ssl_getmail()
                 flag++;
                 break;
             case 2:
-                ssl_sendtext(ssl, "", buf, text[3],1);//mail[2] is base64 of username Mjc3ODAxMDYwNkBxcS5jb20=
+                ssl_sendtext(ssl, "", buf, text[3],1);//mail[2] is base64 of username
                 flag++;
                 break;
             case 3:
-                ssl_sendtext(ssl, "", buf, text[4],1);//mail[3] is base64 of password bmdlb2t2a3RmZml1ZGVjYg==
+                ssl_sendtext(ssl, "", buf, text[4],1);//mail[3] is base64 of password
                 flag++;
                 break;
             case 4:
@@ -614,8 +647,11 @@ int ssl_getmail()
                     void* stop = memchr(buf, '>', sizeof(buf));
                     //strncpy(from_addr, buf+strlen("MAIL FROM:<"), len-strlen("MAIL FROM:<")-3);
                     strncpy(from_addr, start+1, stop-start-1);
+                    int p=mail_path(from_addr);
+                    
                     printf("//================== from_addr: <%s> ==================//\r\n",from_addr);
-                    len=SSL_write(ssl, text[5], (int)strlen(text[5]));
+                    if(p==0)len=SSL_write(ssl, text[5], (int)strlen(text[5]));
+                    else len=SSL_write(ssl, errort[1], (int)strlen(errort[1]));
                 }
                 flag++;
                 break;
@@ -629,10 +665,12 @@ int ssl_getmail()
             void* stop = memchr(buf, '>', sizeof(buf));
             //strncpy(to_addr[num_to_addr], buf+strlen("RCPT TO:<"), len-strlen("RCPT TO:<")-3);
             strncpy(to_addr[num_to_addr], start+1, stop-start-1);
+            int p=mail_path(from_addr);
             printf("//================== to_addr[%d]: <%s> ==================//\r\n",num_to_addr+1,to_addr[num_to_addr]);
             num_to_addr+=1;
             
-            len=SSL_write(ssl, text[5], (int)strlen(text[5]));
+            if(p==0) len=SSL_write(ssl, text[5], (int)strlen(text[5]));
+            else len=SSL_write(ssl, errort[0], (int)strlen(errort[0]));
         }
         
         ssl_sendtext(ssl, "DATA", buf, text[6],1);
@@ -669,8 +707,10 @@ int ssl_getmail()
 
 
 int main(){
+    
     while(1){
-        getcwd(local, sizeof(local));
+        //getcwd(local, sizeof(local));
+        
         printf("%s\n\n",local);
         num_to_addr=0;
         ssl_getmail();
