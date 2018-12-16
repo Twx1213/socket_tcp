@@ -117,7 +117,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 1010;
-				ORGANIZATIONNAME = twx;
+				ORGANIZATIONNAME = Tiko;
 				TargetAttributes = {
 					8D95A87821B0FF5D00844EDE = {
 						CreatedOnToolsVersion = 10.1;
