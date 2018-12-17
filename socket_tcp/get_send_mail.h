@@ -70,39 +70,48 @@ int sendmail(){
     
     //=====HELO=====//
     sendtext(sock, "", "", mail[0], 0);
-    read_socket(sock);
+    len=read_socket(sock);
+    if(len<0) return -1;
     
     //=====AUTH LOGIN=====//
     sendtext(sock, "", "", mail[1], 0);
-    read_socket(sock);
+    len=read_socket(sock);
+    if(len<0) return -1;
     
     //=====base64 of username=====//
     sendtext(sock, "", "", mail[2], 0);
-    read_socket(sock);
+    len=read_socket(sock);
+    if(len<0) return -1;
     
     //=====base64 of password=====//
     sendtext(sock, "", "", mail[3], 0);
-    read_socket(sock);
+    len=read_socket(sock);
+    if(len<0) return -1;
     
     //=====mail from=====//
     sendtext(sock, "", "", mail[4], 0);
-    read_socket(sock);
+    len=read_socket(sock);
+    if(len<0) return -1;
     
     //=====rcpt to=====//
     sendtext(sock, "", "", mail[5], 0);
-    read_socket(sock);
+    len=read_socket(sock);
+    if(len<0) return -1;
     
     //=====DATA=====//
     sendtext(sock, "", "", mail[6], 0);
-    read_socket(sock);
+    len=read_socket(sock);
+    if(len<0) return -1;
     for(int j=7;j<=n-1;j++){
         sendtext(sock, "", "", mail[j], 0);
     }
-    read_socket(sock);
+    len=read_socket(sock);
+    if(len<0) return -1;
     
     //=====QUIT=====//
     sendtext(sock, "", "",  "QUIT\r\n", 0);
-    read_socket(sock);
+    len=read_socket(sock);
+    if(len<0) return -1;
     
     //====Close socket and finish=====//
     close(sock);
@@ -206,8 +215,14 @@ int getmail()
                 if(strncmp(buf,"MAIL FROM",strlen("MAIL FROM"))==0){
                     printf("%s\n",text[5]);
                     from_addr=malloc(sizeof(char)*100);
-                    strncpy(from_addr, buf+strlen("MAIL FROM:<"), len-strlen("MAIL FROM:<")-3);
-                    len=send(client_sockfd,text[5],strlen(text[5]),0);
+                    void* start=memchr(buf,'<',sizeof(buf));
+                    void* stop = memchr(buf, '>', sizeof(buf));
+                    strncpy(from_addr, start+1, stop-start-1);
+                    int p=mail_path(from_addr);
+                    
+                    printf("//================== from_addr: <%s> ==================//\r\n",from_addr);
+                    if(p==0)len=send(client_sockfd,text[5],strlen(text[5]),0);
+                    else len=send(client_sockfd,errort[1], (int)strlen(errort[1]),0);
                 }
                 flag++;
                 break;
@@ -216,30 +231,37 @@ int getmail()
         if(strncmp(buf,"RCPT TO",strlen("RCPT TO"))==0){
             printf("%s\n",text[5]);
             to_addr[num_to_addr]=malloc(sizeof(char)*100);
-            strncpy(to_addr[num_to_addr], buf+strlen("RCPT TO:<"), len-strlen("RCPT TO:<")-3);
+            void* start=memchr(buf,'<',sizeof(buf));
+            void* stop = memchr(buf, '>', sizeof(buf));
+            strncpy(to_addr[num_to_addr], start+1, stop-start-1);
+            int p=mail_path(from_addr);
+            printf("//================== to_addr[%d]: <%s> ==================//\r\n",num_to_addr+1,to_addr[num_to_addr]);
             num_to_addr+=1;
-            len=send(client_sockfd,text[5],strlen(text[5]),0);
+            
+            if(p==0) len=send(client_sockfd,text[5],strlen(text[5]),0);
+            else len=send(client_sockfd,errort[0], (int)strlen(errort[0]),0);
         }
         
         sendtext(client_sockfd, "DATA", buf, text[6],1);
         if(strncmp(buf+strlen(buf)-3,".",strlen("."))==0){
             n=i;
-            printf("\r\n============================ sending %d messages ===========================\r\n",i);
+            printf("\r\n=============== sending %d messages ===============\r\n",i);
             if(i>7 && flag>=5) len=sendmail();
             if(len>0){
                 len=send(client_sockfd,text[7],strlen(text[7]),0);
                 printf("%s\n",text[7]);
             }
             else{
-                len=send(client_sockfd,errort[0],strlen(errort[0]),0);
-                printf("%s\n",errort[0]);
+                len=send(client_sockfd,errr,strlen(errr),0);
+                printf("%s\n",errr);
             }
             
         }
         
     }
     
-    printf("client %s closed\n\n",inet_ntoa(remote_addr.sin_addr));
+    //printf("client %s closed\n\n",inet_ntoa(remote_addr.sin_addr));
+    printf("\x1b[%d;%dclient %s closed\n\n\x1b[0m", 46, 43, inet_ntoa(remote_addr.sin_addr));
     close(client_sockfd);
     fclose(fp);
     

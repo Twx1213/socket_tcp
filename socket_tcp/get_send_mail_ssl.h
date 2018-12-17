@@ -24,7 +24,7 @@ int ssl_get_line(SSL* ssl)
         errr=malloc(sizeof(char)*sizeof(buf));
         strcpy(errr,&(*buf));
     }
-    printf ("S: %s", buf);
+    printf ("[\x1b[0;%dmsmtp.qq.com\x1b[0m]: \n%s\n", 34, buf);
     return err;
 }
 
@@ -74,7 +74,7 @@ int ssl_sendmail(){
         return -1;
     }
     else
-        printf("Connected to %s\n",inet_ntoa(server.sin_addr));
+        printf("Connected to \x1b[0;%dm%s\x1b[0m\n\n",34, inet_ntoa(server.sin_addr));
     
     //=====Write some data then read some =====//
     read_socket(sock); // SMTP Server WELCOME string
@@ -89,12 +89,12 @@ int ssl_sendmail(){
     
     SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2);
     ssl = SSL_new (ctx);
-    if(ssl>0) printf("new_SSL:%d\n", (int)ssl);
+    if(ssl>0) printf("new_SSL:\x1b[0;%dm%d\x1b[0m\n", 34, (int)ssl);
+    
     SSL_set_fd (ssl, sock);
     
     err = SSL_connect (ssl);
-    printf ("SSL connection using %s\n", SSL_get_cipher (ssl));
-    printf("Begin SSL data exchange\n");
+    printf("[\x1b[0;%dmBegin SSL data exchange\x1b[0m]\n",32);
     //=====SSL HELO=====//
     ssl_send_line(ssl, mail[0]);
     len=ssl_get_line(ssl);
@@ -240,7 +240,8 @@ int ssl_getmail()
     }
     //=====listen queue=====//
     listen(server_sockfd,5);
-    printf("wait for client.\n");
+    printf("[\x1b[0;%dmwait for client\x1b[0m]\n",33);
+    
     sin_size=sizeof(struct sockaddr_in);
     
     //=====wait for client=====//
@@ -250,7 +251,7 @@ int ssl_getmail()
         exit(errno);
     }
     else
-        printf("server: got connection from %s, port %d, socket %d\n", inet_ntoa(remote_addr.sin_addr), ntohs(remote_addr.sin_port), client_sockfd);
+        printf("[\x1b[0;%dmserver\x1b[0m]: got connection from %s, port %d, socket %d\n\n", 32, inet_ntoa(remote_addr.sin_addr), ntohs(remote_addr.sin_port), client_sockfd);
     fp=fopen(mailtxt, "w+");
     
     
@@ -285,7 +286,7 @@ int ssl_getmail()
         mail[i] = malloc(sizeof(char)*len);
         strcpy(mail[i],&(*buf));
         i++;
-        printf("%s\n",buf);
+        printf("[\x1b[0;%dmFoxmail\x1b[0m]: \n%s\n",34, buf);
         fprintf(fp,"%s", buf);
         if(strncmp(buf,"QUIT",4)==0){
             len=-2;
@@ -318,7 +319,7 @@ int ssl_getmail()
                     from_addr=malloc(sizeof(char)*100);
                     void* start=memchr(buf,'<',sizeof(buf));
                     void* stop = memchr(buf, '>', sizeof(buf));
-                    //strncpy(from_addr, buf+strlen("MAIL FROM:<"), len-strlen("MAIL FROM:<")-3);
+                    
                     strncpy(from_addr, start+1, stop-start-1);
                     int p=mail_path(from_addr);
                     
@@ -336,7 +337,7 @@ int ssl_getmail()
             to_addr[num_to_addr]=malloc(sizeof(char)*100);
             void* start=memchr(buf,'<',sizeof(buf));
             void* stop = memchr(buf, '>', sizeof(buf));
-            //strncpy(to_addr[num_to_addr], buf+strlen("RCPT TO:<"), len-strlen("RCPT TO:<")-3);
+            
             strncpy(to_addr[num_to_addr], start+1, stop-start-1);
             int p=mail_path(from_addr);
             printf("//================== to_addr[%d]: <%s> ==================//\r\n",num_to_addr+1,to_addr[num_to_addr]);
@@ -364,7 +365,8 @@ int ssl_getmail()
         
     }
     
-    printf("client %s closed\n\n",inet_ntoa(remote_addr.sin_addr));
+    //printf("client %s closed\n\n",inet_ntoa(remote_addr.sin_addr));
+    printf("[\x1b[0;%dmclient %s closed.\x1b[0m]\n\n", 33, inet_ntoa(remote_addr.sin_addr));
     close(client_sockfd);
     fclose(fp);
     // 关闭 SSL 连接 //

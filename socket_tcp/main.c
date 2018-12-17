@@ -22,8 +22,8 @@ int main(){
         
         printf("%s\n\n",local);
         num_to_addr=0;
-        //ssl_getmail();
-        getmail();
+        ssl_getmail();
+        //getmail();
         printf("//================== from_addr: <%s> ==================//\r\n",from_addr);
         for(int i=0;i<num_to_addr;i++){
             printf("//================== to_addr[%d]: <%s> ==================//\r\n",i+1,to_addr[i]);

@@ -55,22 +55,32 @@ int sendtext(int sock, char* cmpstr, char* buf1, char* text, int ifserver){
     }
     return 1;
 }
-void read_socket(int sock)
+int read_socket(int sock)
 {
+    int err=0;
     len = read(sock,buf,BUFSIZ);
     write(1,buf,len);
+    
+    if(strncmp(buf,"5",1)==0){
+        err=-1;
+        errr=malloc(sizeof(char)*sizeof(buf));
+        strcpy(errr,&(*buf));
+    }
+    
+    return err;
 }
 
 int ssl_sendtext(SSL* ssl, char* cmpstr, char* buf1, char* text, int ifserver){
     if(ifserver==1){
         if(strncmp(buf1,cmpstr,strlen(cmpstr))==0){
             len=SSL_write(ssl, text, (int)strlen(text));
-            printf("%s\n",text);
+            printf("[\x1b[0;%dmserver\x1b[0m]: \n%s\n",34, text);
         }
     }
     else{
         len=SSL_write(ssl, text, (int)strlen(text));
         printf("Client:%s\n",text);
+        
     }
     return 1;
 }
@@ -78,7 +88,8 @@ int ssl_sendtext(SSL* ssl, char* cmpstr, char* buf1, char* text, int ifserver){
 int ssl_send_line(SSL* ssl,char* cmd)
 {
     unsigned long err;
-    printf("C: %s",cmd);
+    //printf("C: %s",cmd);
+    printf ("[\x1b[0;%dmClient\x1b[0m]: \n%s\n", 34, cmd);
     err = SSL_write (ssl, cmd, (int)strlen(cmd));
     return 1;
 }
