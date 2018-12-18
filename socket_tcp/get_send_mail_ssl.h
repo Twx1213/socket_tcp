@@ -145,13 +145,15 @@ int ssl_sendmail(){
     shutdown (sock,2);
     SSL_free (ssl);
     SSL_CTX_free (ctx);
+    
     return 1;
 }
 
 int ssl_getmail()
 {
     FILE *fp=NULL;
-    char* mailtxt=log_path();//Path of txt file
+    char* mailtxt=NULL;
+    mailtxt=log_path(mailtxt);//Path of txt file
     int server_sockfd;
     int client_sockfd = 0;
     struct sockaddr_in my_addr;
@@ -359,6 +361,7 @@ int ssl_getmail()
             else{
                 len=SSL_write(ssl, errr, (int)strlen(errr));
                 printf("%s\n",errr);
+                free(errr);
             }
             //break;
         }
@@ -376,6 +379,7 @@ int ssl_getmail()
     close(server_sockfd);
     SSL_CTX_free(ctx);
     return 0;
+    
 }
 
 #endif /* get_send_mail_ssl_h */

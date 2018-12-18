@@ -28,6 +28,12 @@ int main(){
         for(int i=0;i<num_to_addr;i++){
             printf("//================== to_addr[%d]: <%s> ==================//\r\n",i+1,to_addr[i]);
         }
+        free(from_addr);
+        for(int i=0;i<num_to_addr;i++)
+            free(to_addr[i]);
+        for(int i=0;i<20;i++){
+            free(mail[i]);
+        }
     }
     return 0;
 }

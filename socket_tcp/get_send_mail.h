@@ -13,10 +13,10 @@
 
 
 
-char* log_path(){
+char* log_path(char* str){
     struct tm *ptr;
     time_t localTime;
-    char* str;
+    
     str = malloc(sizeof(char)*100);
     localTime=time(NULL);
     ptr=localtime(&localTime);
@@ -24,6 +24,7 @@ char* log_path(){
     //logs_path=malloc(sizeof(char)*120);
     //logs_path = "/Users/twx/Desktop/Log-%Y%m%d%H%M.txt";
     strftime(str,100,logs_path,ptr);
+    //free(logs_path);
     printf("%s\n",*(&str));
     return str;
 }
@@ -121,7 +122,8 @@ int sendmail(){
 int getmail()
 {
     FILE *fp=NULL;
-    char* mailtxt=log_path();//Path of txt file
+    char* mailtxt=NULL;
+    mailtxt=log_path(mailtxt);//Path of txt file
     int server_sockfd;
     int client_sockfd = 0;
     struct sockaddr_in my_addr;
@@ -254,6 +256,7 @@ int getmail()
             else{
                 len=send(client_sockfd,errr,strlen(errr),0);
                 printf("%s\n",errr);
+                free(errr);
             }
             
         }
